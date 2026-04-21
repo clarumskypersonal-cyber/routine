@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>루틴</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f5f3ee;--card:#ffffff;--border:#e8e4dc;
+  --t1:#1a1814;--t2:#6b6560;--t3:#a8a29c;
+  --green:#2d7a3a;--green-bg:#e8f5eb;
+  --blue:#1a5fa8;--blue-bg:#e6f0fb;
+  --orange:#c45a0a;--orange-bg:#fdf0e6;
+  --purple:#6b3fa8;--purple-bg:#f0ebfb;
+  --gray:#5a5550;--gray-bg:#f0ede8;
+  --teal:#0a7a6b;--teal-bg:#e6f5f3;
+  --red:#c42a2a;--red-bg:#fbe8e8;
+}
+body{background:var(--bg);color:var(--t1);font-family:'Noto Sans KR',sans-serif;min-height:100vh;min-height:100dvh}
+
+/* 기상 화면 */
+#wake-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;padding:40px 24px;text-align:center}
+.wake-clock{font-family:'DM Mono',monospace;font-size:56px;font-weight:500;color:var(--t1);letter-spacing:-0.02em;margin-bottom:4px}
+.wake-date{font-size:15px;color:var(--t2);margin-bottom:60px}
+.wake-btn{width:190px;height:190px;border-radius:50%;background:var(--t1);color:#fff;border:none;font-family:'Noto Sans KR',sans-serif;font-size:20px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:transform .15s;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.wake-btn:active{transform:scale(.94)}
+.wake-icon{font-size:38px}
+.wake-sub{font-size:14px;color:var(--t3);margin-top:28px;line-height:1.7}
+
+/* 메인 */
+#main-screen{display:none}
+.header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:13px 20px;display:flex;align-items:center;justify-content:space-between}
+.h-left{display:flex;flex-direction:column}
+.h-title{font-size:11px;font-weight:500;color:var(--t3);letter-spacing:.1em;text-transform:uppercase}
+.h-wake{font-size:13px;color:var(--t2);margin-top:1px}
+.h-clock{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--t1)}
+
+/* 탭 */
+.tabs{display:flex;padding:14px 20px 0;gap:8px}
+.tab-btn{flex:1;padding:11px;background:var(--card);border:1.5px solid var(--border);border-radius:12px;color:var(--t2);font-size:14px;font-family:'Noto Sans KR',sans-serif;font-weight:500;cursor:pointer;transition:all .15s}
+.tab-btn.active{background:var(--t1);color:#fff;border-color:var(--t1)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* 히어로 */
+.hero{margin:14px 20px 0;background:var(--card);border-radius:20px;border:1.5px solid var(--border);padding:22px 20px 20px;position:relative;overflow:hidden}
+.hero-bar{position:absolute;top:0;left:0;right:0;height:5px;border-radius:20px 20px 0 0}
+.now-lbl{font-size:11px;font-weight:500;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:8px}
+.cur-name{font-size:28px;font-weight:900;color:var(--t1);line-height:1.1;margin-bottom:5px}
+.cur-sub{font-size:14px;color:var(--t2);margin-bottom:18px;line-height:1.5}
+.remain-wrap{display:flex;align-items:flex-end;gap:8px;margin-bottom:14px}
+.remain-num{font-family:'DM Mono',monospace;font-size:42px;font-weight:500;line-height:1;letter-spacing:-.02em}
+.remain-lbl{font-size:13px;color:var(--t2);margin-bottom:5px}
+.prog-bg{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:7px}
+.prog-fill{height:100%;border-radius:3px;transition:width 1s linear}
+.prog-times{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:12px;color:var(--t3)}
+
+/* 파워냅 알람 */
+.nap-alert{display:none;margin:10px 20px 0;background:var(--orange-bg);border:1.5px solid #f0c090;border-radius:14px;padding:16px 18px;font-size:16px;font-weight:700;color:var(--orange);text-align:center;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+
+/* 다음 블록 */
+.next-card{margin:10px 20px 0;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:13px}
+.next-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.next-lbl{font-size:11px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.next-name{font-size:17px;font-weight:700;color:var(--t1)}
+.next-time{font-family:'DM Mono',monospace;font-size:13px;color:var(--t2);margin-top:2px}
+
+/* 리스트 */
+.sched-sec{padding:22px 20px 0}
+.sec-lbl{font-size:11px;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;margin-bottom:10px}
+.blist{display:flex;flex-direction:column}
+.bitem{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;border-radius:12px;border:1.5px solid transparent;transition:all .15s}
+.bitem.active{background:var(--card);border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.bitem.past{opacity:.28}
+.b-time{font-family:'DM Mono',monospace;font-size:13px;color:var(--t3);min-width:44px;padding-top:2px}
+.b-dot-col{display:flex;flex-direction:column;align-items:center;padding-top:4px}
+.b-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.b-line{width:1.5px;height:20px;background:var(--border);margin-top:3px}
+.bitem:last-child .b-line{display:none}
+.b-info{flex:1}
+.b-name{font-size:15px;font-weight:700;color:var(--t1);margin-bottom:2px}
+.bitem.past .b-name{color:var(--t2)}
+.b-desc{font-size:13px;color:var(--t3);line-height:1.4}
+.b-dur{font-family:'DM Mono',monospace;font-size:12px;color:var(--t3);white-space:nowrap;padding-top:3px}
+.done-mark{color:var(--green);font-size:13px}
+
+/* 주간 */
+.wsec{padding:18px 20px 0}
+.wgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+.wday{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:10px 5px;text-align:center}
+.wday.today{border-color:var(--t1);background:var(--t1)}
+.wday.rest{opacity:.4}
+.wday-n{font-size:11px;color:var(--t3);margin-bottom:5px;font-weight:500}
+.wday.today .wday-n{color:rgba(255,255,255,.6)}
+.wday-dot{width:7px;height:7px;border-radius:50%;margin:0 auto 5px}
+.wday-txt{font-size:9px;color:var(--t3);line-height:1.5;word-break:keep-all}
+.wday.today .wday-txt{color:rgba(255,255,255,.65)}
+.cycle-row2{display:flex;gap:10px;margin-top:12px}
+.ccard{flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px}
+.ctitle{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.crow{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--t2);padding:5px 0;border-bottom:1px solid var(--border)}
+.crow:last-child{border-bottom:none}
+.ctag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px}
+.ctag-h{background:var(--red-bg);color:var(--red)}
+.ctag-p{background:var(--green-bg);color:var(--green)}
+
+/* 식단 */
+.stat-row{display:flex;gap:8px;margin-top:18px}
+.stat-box{flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;text-align:center}
+.stat-num{font-size:24px;font-weight:900;color:var(--t1)}
+.stat-unit{font-size:12px;color:var(--t2);margin-top:3px;line-height:1.4}
+.dcards{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.dcard{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px}
+.dlbl{font-size:11px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.dval{font-size:15px;font-weight:700;color:var(--t1);line-height:1.8}
+.dsub{font-size:13px;color:var(--t2);font-weight:400}
+
+.pad{height:48px}
+</style>
+</head>
+<body>
+
+<!-- 기상 화면 -->
+<div id="wake-screen">
+  <div class="wake-clock" id="wclk">00:00</div>
+  <div class="wake-date" id="wdate"></div>
+  <button class="wake-btn" onclick="doWake()">
+    <span class="wake-icon">☀️</span>
+    <span>기상</span>
+  </button>
+  <div class="wake-sub">버튼 누르는 순간<br>오늘 루틴이 시작돼요</div>
+</div>
+
+<!-- 메인 화면 -->
+<div id="main-screen">
+  <div class="header">
+    <div class="h-left">
+      <span class="h-title">오늘의 루틴</span>
+      <span class="h-wake" id="hwake"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px"><span class="h-clock" id="hclk">00:00</span><button onclick="doSleep()" style="background:#f0ede8;border:1.5px solid #e8e4dc;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;color:#5a5550;font-family:sans-serif;cursor:pointer;">🌙 취침</button></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('today')">오늘</button>
+    <button class="tab-btn" onclick="switchTab('week')">주간</button>
+    <button class="tab-btn" onclick="switchTab('diet')">식단</button>
+  </div>
+
+  <!-- 오늘 -->
+  <div class="tab-content active" id="tab-today">
+    <div class="hero" id="hero">
+      <div class="hero-bar" id="hbar"></div>
+      <div class="now-lbl">지금 이 시간</div>
+      <div class="cur-name" id="cname">—</div>
+      <div class="cur-sub" id="csub"></div>
+      <div class="remain-wrap">
+        <div class="remain-num" id="rnum">--:--</div>
+        <div class="remain-lbl">남은 시간</div>
+      </div>
+      <div class="prog-bg"><div class="prog-fill" id="pfill" style="width:0%"></div></div>
+      <div class="prog-times"><span id="pstart">--:--</span><span id="pend">--:--</span></div>
+    </div>
+
+    <div class="nap-alert" id="nap-alert">⏰ 파워냅 20분 완료! 일어날 시간이에요</div>
+
+    <div class="next-card">
+      <div class="next-dot" id="ndot"></div>
+      <div>
+        <div class="next-lbl">다음 블록</div>
+        <div class="next-name" id="nname">—</div>
+        <div class="next-time" id="ntime">—</div>
+      </div>
+    </div>
+
+    <div class="sched-sec">
+      <div class="sec-lbl">오늘 전체 일정</div>
+      <div class="blist" id="blist"></div>
+    </div>
+    <div class="pad"></div>
+  </div>
+
+  <!-- 주간 -->
+  <div class="tab-content" id="tab-week">
+    <div class="wsec">
+      <div class="sec-lbl">이번 주 운동</div>
+      <div class="wgrid" id="wgrid"></div>
+      <div class="sec-lbl" style="margin-top:22px">A주 / B주 사이클</div>
+      <div class="cycle-row2">
+        <div class="ccard">
+          <div class="ctitle" style="color:var(--red)">A주</div>
+          <div class="crow"><span>월~수 3분할</span><span class="ctag ctag-h">중량</span></div>
+          <div class="crow"><span>금~토 2분할</span><span class="ctag ctag-p">자극</span></div>
+        </div>
+        <div class="ccard">
+          <div class="ctitle" style="color:var(--green)">B주</div>
+          <div class="crow"><span>월~수 3분할</span><span class="ctag ctag-p">자극</span></div>
+          <div class="crow"><span>금~토 2분할</span><span class="ctag ctag-h">중량</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="pad"></div>
+  </div>
+
+  <!-- 식단 -->
+  <div class="tab-content" id="tab-diet">
+    <div class="wsec">
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-num">150<span style="font-size:14px">g</span></div>
+          <div class="stat-unit">단백질/일<br>(3끼 기준)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--blue)">2,900</div>
+          <div class="stat-unit">kcal<br>목표</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--orange)">67<span style="font-size:14px">→</span>75</div>
+          <div class="stat-unit">kg<br>린벌크 목표</div>
+        </div>
+      </div>
+      <div class="dcards">
+        <div class="dcard">
+          <div class="dlbl">매끼 고정</div>
+          <div class="dval">고기 300g (목살/앞다리) + 밥 한 공기 이상<br><span class="dsub">단백질 약 60g/끼</span></div>
+        </div>
+        <div class="dcard">
+          <div class="dlbl">2끼 날 보완</div>
+          <div class="dval">고기 400g + 두유 2개<br><span class="dsub">단백질 130g 이상 유지</span></div>
+        </div>
+        <div class="dcard">
+          <div class="dlbl">비타민C 9g</div>
+          <div class="dval">
+            1끼와 함께 3g<br>
+            웨이트 후 식사와 함께 3g<br>
+            3끼와 함께 3g<br>
+            <span class="dsub">취침 직전 멜라토닌 복용</span>
+          </div>
+        </div>
+        <div class="dcard">
+          <div class="dlbl">식사 간격</div>
+          <div class="dval">1끼 → 2끼 약 6시간<br>2끼 → 3끼 약 5시간 30분</div>
+        </div>
+      </div>
+    </div>
+    <div class="pad"></div>
+  </div>
+</div>
+
+<script>
+const C={green:'#2d7a3a',blue:'#1a5fa8',orange:'#c45a0a',purple:'#6b3fa8',gray:'#5a5550',teal:'#0a7a6b',red:'#c42a2a'};
+
+function pad(n){return String(n).padStart(2,'0')}
+function toMin(d){return d.getHours()*60+d.getMinutes()+d.getSeconds()/60}
+function fmtMin(m){const n=((m%(24*60))+24*60)%(24*60);return`${pad(Math.floor(n/60))}:${pad(Math.floor(n%60))}`}
+function fmtDur(m){const h=Math.floor(m/60),mm=m%60;if(h>0&&mm>0)return`${h}h ${mm}m`;if(h>0)return`${h}시간`;return`${mm}분`}
+function fmtRemain(mins){
+  const s=Math.round(mins*60);
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;
+  if(h>0)return`${h}:${pad(m)}:${pad(ss)}`;
+  return`${pad(m)}:${pad(ss)}`;
+}
+
+let BLOCKS=[],wakeTime=null,napDone=false,napTimer=null;
+
+function buildBlocks(wMin){
+  const BED=26*60; // 02:00 다음날 = 26시간
+  const total=(BED-wMin+24*60)%(24*60);
+  // 고정합계: 1끼60 + 물샤워30 + 파워냅20 + 웨이트90 + 2끼60 + 3끼60 + 샴푸샤워30 + 휴식60 = 410
+  const FIXED=410;
+  const flex=Math.max(0,total-FIXED);
+
+  // 웨이트 여유있으면 최대150분
+  const workout=flex>180?150:90;
+  const extraWork=workout-90;
+
+  // 유동배분
+  let toik=flex>30?Math.min(80,Math.round(flex*0.17)):0;
+  let bprep=flex>100?20:0;
+  let rest=flex>60?60:Math.max(30,flex>30?flex-toik-bprep:30);
+  let work=Math.max(0,flex-toik-bprep-(rest-60)-extraWork);
+
+  const B=[];
+  let t=wMin;
+  function add(n,s,d,c){B.push({name:n,sub:s,start:t,end:t+d,color:c});t+=d;}
+
+  add('기상 + 1끼','비타민C 1회 3g · 고기 300g + 밥',60,C.green);
+  if(toik>0) add('토익 LC',`1~2회차 답지 반복학습`,toik,C.purple);
+  add('웨이트',`실운동 ${workout-30}분 · 준비+왕복 30분 포함`,workout,C.blue);
+  add('귀가 + 물샤워','운동 후 물로만 씻기',30,C.gray);
+  add('파워냅','20분 딱 · 알람 자동',20,C.gray);
+  if(bprep>0) add('업무 준비','오늘 할 일 파악',bprep,C.gray);
+  add('2끼','비타민C 2회 3g · 고기 300g + 밥',60,C.orange);
+
+  const w1=work>0?Math.floor(work*0.65):0;
+  const w2=work-w1;
+  if(w1>0) add('업무',`집중 업무 · ${fmtDur(w1)}`,w1,C.blue);
+  add('3끼','비타민C 3회 3g · 고기 300g + 밥',60,C.orange);
+  if(w2>0) add('업무',`마무리 업무 · ${fmtDur(w2)}`,w2,C.blue);
+
+  add('샤워','샴푸로 깔끔하게',30,C.teal);
+  add('휴식','유튜브 / 독서 · 완전히 쉬기',rest,C.teal);
+  return B;
+}
+
+function adjMin(nowMin){
+  if(!wakeTime) return nowMin;
+  const wm=toMin(wakeTime);
+  return nowMin<wm?nowMin+24*60:nowMin;
+}
+
+function findCur(nowMin){
+  const a=adjMin(nowMin);
+  for(let i=0;i<BLOCKS.length;i++){
+    if(a>=BLOCKS[i].start&&a<BLOCKS[i].end) return i;
+  }
+  return -1;
+}
+
+function checkNap(nowMin){
+  const ni=BLOCKS.findIndex(b=>b.name==='파워냅');
+  if(ni===-1||napDone) return;
+  const a=adjMin(nowMin);
+  const nap=BLOCKS[ni];
+  if(a>=nap.end&&a<nap.end+3){
+    document.getElementById('nap-alert').style.display='block';
+    napDone=true;
+    if(navigator.vibrate) navigator.vibrate([600,200,600,200,600]);
+    setTimeout(()=>{document.getElementById('nap-alert').style.display='none';},5*60*1000);
+  }
+}
+
+function updateHero(nowMin){
+  const idx=findCur(nowMin);
+  const a=adjMin(nowMin);
+  if(idx===-1){
+    const done=BLOCKS.length>0&&a>=BLOCKS[BLOCKS.length-1].end;
+    document.getElementById('cname').textContent=done?'오늘 완료! 🎉':'—';
+    document.getElementById('csub').textContent=done?'수고했어. 잘 자!':'';
+    document.getElementById('rnum').textContent='--:--';
+    document.getElementById('rnum').style.color='var(--t1)';
+    document.getElementById('pfill').style.width='0%';
+    document.getElementById('hbar').style.background='var(--border)';
+    document.getElementById('nname').textContent='—';
+    document.getElementById('ntime').textContent='';
+    return;
+  }
+  const b=BLOCKS[idx];
+  const elapsed=a-b.start,total=b.end-b.start,remain=b.end-a;
+  const pct=Math.min(100,Math.max(0,elapsed/total*100));
+  document.getElementById('cname').textContent=b.name;
+  document.getElementById('csub').textContent=b.sub;
+  document.getElementById('rnum').textContent=fmtRemain(remain);
+  document.getElementById('rnum').style.color=b.color;
+  document.getElementById('pfill').style.width=pct+'%';
+  document.getElementById('pfill').style.background=b.color;
+  document.getElementById('hbar').style.background=b.color;
+  document.getElementById('pstart').textContent=fmtMin(b.start);
+  document.getElementById('pend').textContent=fmtMin(b.end);
+  const ni=idx+1<BLOCKS.length?idx+1:-1;
+  if(ni!==-1){
+    document.getElementById('nname').textContent=BLOCKS[ni].name;
+    document.getElementById('ntime').textContent=fmtMin(BLOCKS[ni].start)+' 시작';
+    document.getElementById('ndot').style.background=BLOCKS[ni].color;
+  }else{
+    document.getElementById('nname').textContent='오늘 끝!';
+    document.getElementById('ntime').textContent='수고했어';
+    document.getElementById('ndot').style.background='#aaa';
+  }
+}
+
+function renderList(nowMin){
+  const list=document.getElementById('blist');
+  list.innerHTML='';
+  const a=adjMin(nowMin);
+  BLOCKS.forEach((b,i)=>{
+    const isPast=a>=b.end,isActive=a>=b.start&&a<b.end;
+    const dur=b.end-b.start;
+    const item=document.createElement('div');
+    item.className='bitem'+(isPast?' past':'')+(isActive?' active':'');
+    item.innerHTML=`
+      <div class="b-time">${fmtMin(b.start)}</div>
+      <div class="b-dot-col">
+        <div class="b-dot" style="background:${isPast?'#ccc':b.color}"></div>
+        ${i<BLOCKS.length-1?'<div class="b-line"></div>':''}
+      </div>
+      <div class="b-info">
+        <div class="b-name">${b.name}${isPast?' <span class="done-mark">✓</span>':''}</div>
+        <div class="b-desc">${b.sub}</div>
+      </div>
+      <div class="b-dur">${fmtDur(dur)}</div>`;
+    list.appendChild(item);
+  });
+}
+
+const WEEK=[
+  {d:'월',w:'하체\n어깨',c:C.green,r:false},
+  {d:'화',w:'등\n이두',c:C.blue,r:false},
+  {d:'수',w:'가슴\n삼두',c:C.orange,r:false},
+  {d:'목',w:'휴식',c:C.gray,r:true},
+  {d:'금',w:'상체\n전체',c:C.purple,r:false},
+  {d:'토',w:'하체\n전체',c:C.teal,r:false},
+  {d:'일',w:'반나절\n휴식',c:C.gray,r:true},
+];
+
+function renderWeekGrid(){
+  const g=document.getElementById('wgrid');
+  g.innerHTML='';
+  const jsDay=new Date().getDay();
+  const ti=[6,0,1,2,3,4,5][jsDay];
+  WEEK.forEach((d,i)=>{
+    const div=document.createElement('div');
+    div.className='wday'+(d.r?' rest':'')+(i===ti?' today':'');
+    div.innerHTML=`<div class="wday-n">${d.d}</div><div class="wday-dot" style="background:${d.c}"></div><div class="wday-txt">${d.w.replace('\n','<br>')}</div>`;
+    g.appendChild(div);
+  });
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',['today','week','diet'][i]===t)});
+  ['today','week','diet'].forEach(id=>{document.getElementById('tab-'+id).classList.toggle('active',id===t)});
+}
+
+function doWake(){
+  const now=new Date();
+  wakeTime=now;
+  // 오늘 날짜와 함께 저장 (날짜 바뀌면 자동 무효)
+  const saveData={
+    ts: now.getTime(),
+    date: `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`
+  };
+  localStorage.setItem('routineWake', JSON.stringify(saveData));
+  initMain(now);
+}
+
+function doSleep(){
+  if(!confirm('취침 버튼을 누르면 오늘 루틴이 종료되고\n내일 기상 버튼이 다시 나타나요.\n계속할까요?')) return;
+  localStorage.removeItem('routineWake');
+  wakeTime=null;
+  BLOCKS=[];
+  napDone=false;
+  napTimer=null;
+  document.getElementById('nap-alert').style.display='none';
+  document.getElementById('main-screen').style.display='none';
+  document.getElementById('wake-screen').style.display='flex';
+}
+
+function initMain(now){
+  wakeTime=now;
+  BLOCKS=buildBlocks(toMin(now));
+  document.getElementById('wake-screen').style.display='none';
+  document.getElementById('main-screen').style.display='block';
+  document.getElementById('hwake').textContent=`기상 ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  renderWeekGrid();
+}
+
+// 앱 시작시 localStorage 확인
+function checkSavedWake(){
+  const saved=localStorage.getItem('routineWake');
+  if(!saved) return;
+  try{
+    const data=JSON.parse(saved);
+    const now=new Date();
+    const todayStr=`${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+    // 오늘 날짜와 같을 때만 복원
+    if(data.date===todayStr){
+      initMain(new Date(data.ts));
+    } else {
+      // 날짜 바뀌면 자동 삭제
+      localStorage.removeItem('routineWake');
+    }
+  } catch(e){
+    localStorage.removeItem('routineWake');
+  }
+}
+
+function tick(){
+  const now=new Date();
+  const nm=toMin(now);
+  const hh=pad(now.getHours()),mm=pad(now.getMinutes()),ss=pad(now.getSeconds());
+  const days=['일','월','화','수','목','금','토'];
+  document.getElementById('wclk').textContent=`${hh}:${mm}`;
+  document.getElementById('wdate').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+  if(wakeTime){
+    document.getElementById('hclk').textContent=`${hh}:${mm}:${ss}`;
+    updateHero(nm);
+    renderList(nm);
+    checkNap(nm);
+  }
+}
+
+checkSavedWake();
+tick();
+setInterval(tick,1000);
+</script>
+</body>
+</html>
